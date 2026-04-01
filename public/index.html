@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEATHMATCH — FPS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --card: #18181b;
+      --border: #27272a;
+      --accent: #06b6d4;
+      --danger: #dc2626;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --dim: #71717a;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+      color: var(--text);
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: crosshair;
+    }
+
+    /* ── START SCREEN ── */
+    #startScreen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, #0f0f14 0%, #050508 100%);
+      z-index: 100;
+    }
+
+    #startScreen.hidden { display: none; }
+
+    .start-logo {
+      font-size: 11px;
+      letter-spacing: 6px;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .start-title {
+      font-size: clamp(52px, 8vw, 96px);
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text);
+      line-height: 1;
+      text-align: center;
+    }
+
+    .start-title span {
+      color: var(--accent);
+    }
+
+    .start-tagline {
+      margin-top: 12px;
+      font-size: 16px;
+      color: var(--muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .start-divider {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      margin: 36px 0;
+    }
+
+    .start-cards {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+
+    .info-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 22px;
+      min-width: 140px;
+      text-align: center;
+    }
+
+    .info-card .label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .info-card .value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    #startBtn {
+      padding: 18px 64px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(135deg, #0891b2, #06b6d4);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 0 30px rgba(6,182,212,0.25), 0 4px 16px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #startBtn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    }
+
+    #startBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 50px rgba(6,182,212,0.4), 0 8px 24px rgba(0,0,0,0.6);
+    }
+
+    #startBtn:active {
+      transform: translateY(0);
+    }
+
+    .controls-section {
+      margin-top: 40px;
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 600px;
+    }
+
+    .controls-group h3 {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .key-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 26px;
+      padding: 0 6px;
+      background: var(--card);
+      border: 1px solid #3a3a4a;
+      border-bottom: 2px solid #3a3a4a;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0;
+    }
+
+    .key-desc {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .objective {
+      margin-top: 24px;
+      padding: 14px 24px;
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      border-radius: 6px;
+      font-size: 14px;
+      color: #fca5a5;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      z-index: 99;
+    }
+
+    /* Pointer lock overlay hint */
+    #lockHint {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px 40px;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 50;
+    }
+
+    #lockHint.visible {
+      opacity: 1;
+    }
+
+    #lockHint h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    #lockHint p {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      .start-cards { gap: 10px; }
+      .info-card { min-width: 100px; padding: 12px 14px; }
+      .controls-section { gap: 20px; }
+      #startBtn { padding: 14px 40px; font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="gameCanvas"></canvas>
+  <div class="scanlines"></div>
+
+  <!-- Start Screen -->
+  <div id="startScreen">
+    <p class="start-logo">— TACTICAL FPS ENGINE —</p>
+    <h1 class="start-title">DEATH<span>MATCH</span></h1>
+    <p class="start-tagline">Urban Warfare · Raycasting Engine</p>
+
+    <div class="start-divider"></div>
+
+    <div class="start-cards">
+      <div class="info-card">
+        <div class="label">Goal</div>
+        <div class="value">20 KILLS</div>
+      </div>
+      <div class="info-card">
+        <div class="label">Enemies</div>
+        <div class="value">5 AI</div>
+      </div>
+      <div class="info-card">
+        <div class="label">Lives</div>
+        <div class="value">5</div>
+      </div>
+      <div class="info-card">
+        <div class="label">Ammo</div>
+        <div class="value">30+90</div>
+      </div>
+    </div>
+
+    <button id="startBtn">▶ START GAME</button>
+
+    <div class="objective">
+      ⚠ OBJECTIVE: Eliminate 20 enemies before dying 5 times
+    </div>
+
+    <div class="controls-section">
+      <div class="controls-group">
+        <h3>Movement</h3>
+        <div class="key-row"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key-desc">Move</span></div>
+        <div class="key-row"><span class="key">MOUSE</span><span class="key-desc">Aim / Look</span></div>
+      </div>
+      <div class="controls-group">
+        <h3>Combat</h3>
+        <div class="key-row"><span class="key">LMB</span><span class="key-desc">Fire</span></div>
+        <div class="key-row"><span class="key">R</span><span class="key-desc">Reload</span></div>
+        <div class="key-row"><span class="key">ESC</span><span class="key-desc">Pause</span></div>
+      </div>
+      <div class="controls-group">
+        <h3>Tips</h3>
+        <div class="key-row" style="font-size:13px;color:#a1a1aa;">Let spread recover for accuracy</div>
+        <div class="key-row" style="font-size:13px;color:#a1a1aa;">Headshots deal 3× damage</div>
+        <div class="key-row" style="font-size:13px;color:#a1a1aa;">Reload before engagement</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="lockHint">
+    <h2>CLICK TO RESUME</h2>
+    <p>Click the game window to lock cursor & continue</p>
+  </div>
+
+  <script src="game.js"></script>
+  <script>
+    // ── Canvas init ──
+    const canvas = document.getElementById('gameCanvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // ── Start button ──
+    const startBtn = document.getElementById('startBtn');
+    const startScreen = document.getElementById('startScreen');
+
+    startBtn.addEventListener('click', () => {
+      startScreen.classList.add('hidden');
+      canvas.requestPointerLock();
+      startGame();
+    });
+
+    // ── Pointer lock hint ──
+    const lockHint = document.getElementById('lockHint');
+    document.addEventListener('pointerlockchange', () => {
+      if (document.pointerLockElement === canvas) {
+        lockHint.classList.remove('visible');
+      } else {
+        // Only show hint if game has started (start screen gone)
+        if (startScreen.classList.contains('hidden')) {
+          lockHint.classList.add('visible');
+          setTimeout(() => lockHint.classList.remove('visible'), 3000);
+        }
+      }
+    });
+
+    // Re-lock on canvas click when paused
+    canvas.addEventListener('click', () => {
+      if (!document.pointerLockElement && startScreen.classList.contains('hidden')) {
+        canvas.requestPointerLock();
+      }
+    });
+  </script>
+</body>
+</html>

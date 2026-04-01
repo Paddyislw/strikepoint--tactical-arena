@@ -1,0 +1,17 @@
+{
+  "name": "deathmatch-fps",
+  "version": "1.0.0",
+  "description": "Raycasting FPS game inspired by CS:GO deathmatch",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "build": "node --check src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
